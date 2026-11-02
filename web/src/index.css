@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+
+@theme static {
+  --font-sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #1a2033;
+  --color-ink-soft: #4a5268;
+  --color-ink-faint: #7b8296;
+  --color-ground: #edeff3;
+  --color-surface: #ffffff;
+  --color-line: #d6dae3;
+  --color-action: #3b45c7;
+  --color-action-ink: #2a3299;
+
+  /* Star rating scale, the page's one color system */
+  --color-star-1: #c4473a;
+  --color-star-2: #d5803a;
+  --color-star-3: #a99a2e;
+  --color-star-4: #4f9467;
+  --color-star-5: #2a7c85;
+  --color-listing: #5b6276;
+}
+
+html {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Answer prose */
+.prose-answer {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 68ch;
+}
+.prose-answer p {
+  margin: 0 0 0.9em;
+}
+.prose-answer ul,
+.prose-answer ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.25em;
+}
+.prose-answer ul {
+  list-style: disc;
+}
+.prose-answer ol {
+  list-style: decimal;
+}
+.prose-answer li {
+  margin: 0.35em 0;
+  padding-left: 0.2em;
+}
+.prose-answer li::marker {
+  color: var(--color-ink-faint);
+}
+.prose-answer strong {
+  font-weight: 650;
+}
+
+.caret::after {
+  content: '';
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--color-action);
+  animation: blink 1s steps(2, start) infinite;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* A cited source flashes once when its chip is clicked */
+.flash {
+  animation: flash 1.2s ease-out;
+}
+@keyframes flash {
+  0% {
+    background-color: color-mix(in srgb, var(--color-action) 14%, white);
+  }
+  100% {
+    background-color: var(--color-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret::after,
+  .flash {
+    animation: none;
+  }
+}

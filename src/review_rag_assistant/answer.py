@@ -7,7 +7,7 @@ happens: the router's plan, the sources found, answer tokens, then timings.
 import logging
 import time
 from collections.abc import Iterator
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 
 import weaviate
 
@@ -29,7 +29,8 @@ Call one or both tools:
 For questions like "best X under $Y and do people complain about it", call both.
 
 Rules:
-- Only set a filter the user actually stated or clearly implied. Leave the rest out.
+- Only set a filter the user actually stated. Leave the rest out.
+- Set platform or product_type only when the user names a platform or kind of product, e.g. "for Switch" or "accessories". A product name alone is not a reason to set them.
 - Put the product name, if any, in the search_reviews query.
 - Write queries as short descriptive phrases, not questions."""
 
@@ -135,16 +136,39 @@ def plan(llm: LLM, question: str, tools: list[ToolSpec]) -> list[ToolCall]:
     return calls or [ToolCall("search_reviews", {"query": question})]
 
 
+MIN_HITS_BEFORE_RELAXING = 3
+# Reranker score a product needs to compete in a "best rated" / "cheapest" sort.
+MIN_RELEVANCE_FOR_SORT = 0.5
+
+
 def execute(client: weaviate.WeaviateClient, call: ToolCall, cfg: RetrievalConfig) -> tuple[list[Hit], dict]:
     query = str(call.arguments.get("query") or "").strip()
-    if call.name == "search_products":
-        filters = _clean_filters(call.arguments, PRODUCT_FILTERS)
-        res = retrieve(client, store.PRODUCT, query, k=PRODUCTS_K * 2, filters=filters, config=cfg)
-        hits = sort_products(res.hits, call.arguments.get("sort_by") or "relevance", PRODUCTS_K)
+    products = call.name == "search_products"
+    sort_by = call.arguments.get("sort_by") or "relevance"
+    # When the user asks for "best rated" or "cheapest", every relevant candidate should compete on that
+    # field. Among similar products, rerank order is close to noise, so cutting to the top 12 by relevance
+    # first can drop the real answer (it dropped amFilm, 4.8 stars from 110K ratings, at position 13).
+    if products:
+        k = cfg.candidates if sort_by != "relevance" else PRODUCTS_K * 2
+        collection = store.PRODUCT
     else:
-        filters = _clean_filters(call.arguments, REVIEW_FILTERS)
-        res = retrieve(client, store.REVIEW, query, k=REVIEWS_K, filters=filters, config=cfg)
-        hits = res.hits
+        collection, k = store.REVIEW, REVIEWS_K
+    filters = _clean_filters(call.arguments, PRODUCT_FILTERS if products else REVIEW_FILTERS)
+    res = retrieve(client, collection, query, k=k, filters=filters, config=cfg)
+
+    # Amazon's platform and category labels are often wrong, so a filter on them can hide the
+    # right answer. If it leaves too little, retry without those two and keep price/rating filters.
+    if len(res.hits) < MIN_HITS_BEFORE_RELAXING and (filters.platform or filters.product_type):
+        relaxed = replace(filters, platform=None, product_type=None)
+        log.info("relaxing platform/product_type filters for %r", query)
+        res = retrieve(client, collection, query, k=k, filters=relaxed, config=cfg)
+        res.timings_ms["relaxed"] = 1.0
+
+    hits = res.hits
+    if products:
+        if sort_by != "relevance" and cfg.rerank:
+            hits = [h for h in hits if (h.rerank_score or 0) >= MIN_RELEVANCE_FOR_SORT] or hits
+        hits = sort_products(hits, sort_by, PRODUCTS_K)
     return hits, res.timings_ms
 
 

@@ -1,0 +1,897 @@
+{
+  "summary": {
+    "generator": "ollama:qwen3.5:4b",
+    "n": 48,
+    "tool_accuracy": 0.8333333333333334,
+    "n_with_filters": 4,
+    "filter_accuracy": 1.0,
+    "invented_filter_rate": 0.2916666666666667,
+    "p50_latency_ms": 1021.7977765005344
+  },
+  "rows": [
+    {
+      "id": "rf01",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Forty4 wireless controller PC emulator setup"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1367.684562001159
+    },
+    {
+      "id": "rf02",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Corsair K100 RGB lighting downsides problems"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1001.7312210002274
+    },
+    {
+      "id": "rf03",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Logitech G933 to Corsair Virtuoso RGB Wireless SE"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1040.6666890012275
+    },
+    {
+      "id": "rf04",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "wired LAN adapter for Nintendo Switch",
+            "platform": "Nintendo Switch",
+            "product_type": "Accessories"
+          }
+        },
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Nintendo Switch wired LAN adapter online play performance",
+            "platform": "Nintendo Switch",
+            "product_type": "Accessories"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 2129.4511659998534
+    },
+    {
+      "id": "rf05",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "SimCity 4 Deluxe physical copy installation problems"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 970.5056460006745
+    },
+    {
+      "id": "rf06",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Benazcap dockable case for Switch OLED"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 973.6028959996474
+    },
+    {
+      "id": "rf07",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "TERIOS PS4-compatible wireless controller joystick feel"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 980.2355229985551
+    },
+    {
+      "id": "rf08",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "PDP Zelda GameCube-style fight pad phantom button presses"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1003.9954210005817
+    },
+    {
+      "id": "rf09",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "IINE Switch game card case"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 929.7243529999832
+    },
+    {
+      "id": "rf10",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "PDP Talon media remote for Xbox One durability"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 980.6565010003396
+    },
+    {
+      "id": "rf11",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "ZJFKSDYX L87 wireless keyboard backlit letters"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1045.4635679998319
+    },
+    {
+      "id": "rf12",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Glorious Model O Minus mouse"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 952.6062249988172
+    },
+    {
+      "id": "rf13",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Xbox controller battery pack charging frequency"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 946.9454810005118
+    },
+    {
+      "id": "rf14",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "WEGWANG replacement Xbox One power supply noisy"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 989.0887290002865
+    },
+    {
+      "id": "rf15",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Razer Naga 2014 scroll wheel problems"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1023.7765849997231
+    },
+    {
+      "id": "rf16",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "8BitDo Pro 2 wired Xbox controller comfort"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 996.7277699997794
+    },
+    {
+      "id": "rf17",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Quest 2 carrying case"
+          }
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Quest 1 carrying case"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1333.6365890008892
+    },
+    {
+      "id": "rf18",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Logitech G PRO X Wireless headset PC audiophile",
+            "platform": "PC",
+            "max_review_rating": 3
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "max_review_rating",
+        "platform"
+      ],
+      "latency_ms": 1343.890146999911
+    },
+    {
+      "id": "rf19",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Logitech X56 HOTAS buttons activate on their own"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1021.1889060010435
+    },
+    {
+      "id": "rf20",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Five Nights at Freddy's Core Collection Switch empty case",
+            "platform": "Nintendo Switch",
+            "product_type": "Digital Video Games"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 1393.1710310007475
+    },
+    {
+      "id": "rf21",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Farming Simulator 20 Switch",
+            "platform": "Nintendo Switch"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [
+        "platform"
+      ],
+      "latency_ms": 1135.1664850008092
+    },
+    {
+      "id": "rf22",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Kingdom Come Deliverance PS4 technical problems",
+            "platform": "PlayStation 4"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "platform"
+      ],
+      "latency_ms": 1186.9218880001426
+    },
+    {
+      "id": "rf23",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "SteelSeries Arctis 9X Xbox connection stability"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1009.5935919998738
+    },
+    {
+      "id": "rf24",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "SNES-style USB controller wire short out"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 964.003376000619
+    },
+    {
+      "id": "rf25",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "DREVO Calibur V2 TE keyboard"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 982.6372400002583
+    },
+    {
+      "id": "rf26",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "SteelSeries support broken Rival 600 mouse"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1013.3060970001679
+    },
+    {
+      "id": "rf27",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Thrustmaster T300 RS base noise issues"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1019.9781800001801
+    },
+    {
+      "id": "rf28",
+      "type": "review_fact",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "DIERYA DK63N keyboard drink spill"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1006.720530000166
+    },
+    {
+      "id": "po01",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "PS5 DualSense controller stick drift"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 954.804677001448
+    },
+    {
+      "id": "po02",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "official Nintendo Switch Pro Controller"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 925.7127290002245
+    },
+    {
+      "id": "po03",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Meta Quest 2 comfort long sessions"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 977.5589700002456
+    },
+    {
+      "id": "po04",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Nioh difficulty PS4",
+            "platform": "PlayStation 4",
+            "product_type": "Digital Video Games"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 1382.9939039987948
+    },
+    {
+      "id": "po05",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Kirby and the Forgotten Land",
+            "min_review_rating": 4
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "min_review_rating"
+      ],
+      "latency_ms": 1121.956561000843
+    },
+    {
+      "id": "po06",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Logitech G29 racing wheel force feedback build quality"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1022.4066470000253
+    },
+    {
+      "id": "po07",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "amFilm Switch screen protector installation"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 953.1168770008662
+    },
+    {
+      "id": "po08",
+      "type": "product_opinion",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Tears of the Kingdom compared to Breath of the Wild"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1023.7038429986569
+    },
+    {
+      "id": "ps01",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "wireless gaming headset",
+            "max_price": 60,
+            "min_average_rating": 4,
+            "sort_by": "rating"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "extra_filters": [
+        "min_average_rating"
+      ],
+      "latency_ms": 1493.8588049990358
+    },
+    {
+      "id": "ps02",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "racing wheel",
+            "platform": "PlayStation 5",
+            "product_type": "Accessories"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 1325.6970800011914
+    },
+    {
+      "id": "ps03",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "screen protector",
+            "platform": "Nintendo Switch",
+            "min_average_rating": 4,
+            "sort_by": "rating"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "extra_filters": [
+        "min_average_rating",
+        "platform"
+      ],
+      "latency_ms": 1465.1699810001446
+    },
+    {
+      "id": "ps04",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "PS5 games",
+            "max_price": 30,
+            "platform": "PlayStation 5",
+            "product_type": "Digital Video Games",
+            "sort_by": "popularity"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "extra_filters": [
+        "product_type"
+      ],
+      "latency_ms": 1729.6650339994812
+    },
+    {
+      "id": "ps05",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "gaming mouse",
+            "max_price": 30
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "extra_filters": [],
+      "latency_ms": 1117.9880119998415
+    },
+    {
+      "id": "ps06",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "DualSense charging options"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 923.1301970012282
+    },
+    {
+      "id": "ps07",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "VR headset",
+            "product_type": "Virtual Reality",
+            "min_average_rating": 4,
+            "sort_by": "rating"
+          }
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "VR headset accessories",
+            "product_type": "Accessories",
+            "min_average_rating": 4,
+            "sort_by": "rating"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [
+        "min_average_rating",
+        "product_type"
+      ],
+      "latency_ms": 2438.7219050004205
+    },
+    {
+      "id": "ps08",
+      "type": "product_search",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Elden Ring"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 917.9127570005221
+    },
+    {
+      "id": "cm01",
+      "type": "comparison",
+      "calls": [
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "SteelSeries Arctis 7 reliability"
+          }
+        },
+        {
+          "name": "search_reviews",
+          "arguments": {
+            "query": "Corsair Virtuoso reliability"
+          }
+        }
+      ],
+      "tool_ok": true,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1409.6083610002097
+    },
+    {
+      "id": "cm02",
+      "type": "comparison",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Breath of the Wild or Skyward Sword HD",
+            "platform": "Nintendo Switch",
+            "product_type": "Digital Video Games"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 1436.9157979999727
+    },
+    {
+      "id": "cm03",
+      "type": "comparison",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Nintendo Switch Pro Controller",
+            "platform": "Nintendo Switch",
+            "product_type": "Accessories",
+            "max_price": 60,
+            "sort_by": "rating"
+          }
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "DOYOKY Nintendo Switch Controller",
+            "platform": "Nintendo Switch",
+            "product_type": "Accessories",
+            "max_price": 30,
+            "sort_by": "rating"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [
+        "max_price",
+        "platform",
+        "product_type"
+      ],
+      "latency_ms": 2905.8312409997598
+    },
+    {
+      "id": "cm04",
+      "type": "comparison",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Logitech G920"
+          }
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "Logitech G29"
+          }
+        }
+      ],
+      "tool_ok": false,
+      "args_ok": null,
+      "extra_filters": [],
+      "latency_ms": 1369.2452930008585
+    }
+  ]
+}

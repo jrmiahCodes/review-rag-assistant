@@ -213,9 +213,14 @@ def fetch_products(client: weaviate.WeaviateClient, asins: list[str]) -> list[Hi
     return [Hit(collection=PRODUCT, id=a, properties=by_asin[a], score=0.0) for a in asins if a in by_asin]
 
 
-def distinct_values(client: weaviate.WeaviateClient, prop: str) -> list[str]:
-    """Distinct values of a keyword property on Product (used to tell the router valid platforms/types)."""
+def distinct_values(client: weaviate.WeaviateClient, prop: str, min_count: int = 20) -> list[str]:
+    """Values of a keyword property on Product that cover at least `min_count` products.
+
+    The router picks filter values from this list. Rare values are left out on purpose: given
+    "Digital Video Games" (1 product) next to "Games" (1,364), a small model sometimes picks the
+    rare one and filters the answer away.
+    """
     res = client.collections.use(PRODUCT).aggregate.over_all(
         group_by=wvc.aggregate.GroupByAggregate(prop=prop, limit=200)
     )
-    return sorted(g.grouped_by.value for g in res.groups if g.grouped_by.value)
+    return sorted(g.grouped_by.value for g in res.groups if g.grouped_by.value and g.total_count >= min_count)

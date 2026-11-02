@@ -101,6 +101,74 @@ def _mean(xs) -> float:
     return sum(xs) / len(xs) if xs else 0.0
 
 
+# ---------- router ----------
+
+
+def _arg_matches(expected, actual) -> bool:
+    if isinstance(expected, int | float):
+        try:
+            return abs(float(actual) - float(expected)) < 0.01
+        except (TypeError, ValueError):
+            return False
+    return str(actual).strip().lower() == str(expected).strip().lower()
+
+
+def router_eval(client: weaviate.WeaviateClient, items: list[dict], generator: str | None = None) -> dict:
+    """Did the router pick the expected tool, extract the stated filters, and avoid inventing others?"""
+    from review_rag_assistant.answer import plan, router_tools
+    from review_rag_assistant.llm import get_llm
+
+    llm = get_llm(generator)
+    tools = router_tools(store.distinct_values(client, "platform"), store.distinct_values(client, "product_type"))
+    rows = []
+    for item in items:
+        exp = item.get("expected_route")
+        if not exp:
+            continue
+        t = time.perf_counter()
+        calls = plan(llm, item["question"], tools)
+        ms = (time.perf_counter() - t) * 1000
+        called = {c.name for c in calls}
+        tool_ok = set(exp["tools"]) <= called
+        exp_args = exp.get("args", {})
+        args_ok = all(
+            any(_arg_matches(v, c.arguments.get(k)) for c in calls if c.name in exp["tools"])
+            for k, v in exp_args.items()
+        )
+        # Filters the question never asked for. These matter: Amazon's platform labels are noisy,
+        # so an invented platform filter can hide the right answer.
+        extra = sorted(
+            {
+                k
+                for c in calls
+                for k, v in c.arguments.items()
+                if k not in ("query", "sort_by") and v and k not in exp_args
+            }
+        )
+        rows.append(
+            {
+                "id": item["id"],
+                "type": item["type"],
+                "calls": [asdict(c) for c in calls],
+                "tool_ok": tool_ok,
+                "args_ok": args_ok if exp_args else None,
+                "extra_filters": extra,
+                "latency_ms": ms,
+            }
+        )
+    with_args = [r for r in rows if r["args_ok"] is not None]
+    summary = {
+        "generator": llm.name,
+        "n": len(rows),
+        "tool_accuracy": _mean(r["tool_ok"] for r in rows),
+        "n_with_filters": len(with_args),
+        "filter_accuracy": _mean(r["args_ok"] for r in with_args),
+        "invented_filter_rate": _mean(bool(r["extra_filters"]) for r in rows),
+        "p50_latency_ms": statistics.median(r["latency_ms"] for r in rows) if rows else 0.0,
+    }
+    return {"summary": summary, "rows": rows}
+
+
 # ---------- generation ----------
 
 CITATION = re.compile(r"\[(\d+)\]")

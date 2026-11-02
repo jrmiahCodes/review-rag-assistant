@@ -106,6 +106,24 @@ def eval_retrieval() -> None:
     console.print(f"[dim]saved {path.relative_to(settings.processed_dir.parents[1])}[/dim]")
 
 
+@app.command("eval-router")
+def eval_router(generator: str = typer.Option(None, "--generator", "-g")) -> None:
+    """Check the router's tool choice and filter extraction on the golden set."""
+    from review_rag_assistant import evals, store
+
+    items = evals.load_golden()
+    with store.connect() as client:
+        result = evals.router_eval(client, items, generator)
+    path = evals.save("router", result["summary"]["generator"], result)
+    for k, v in result["summary"].items():
+        console.print(f"{k:24} {v:.3f}" if isinstance(v, float) else f"{k:24} {v}")
+    for r in result["rows"]:
+        if not r["tool_ok"] or r["args_ok"] is False or r["extra_filters"]:
+            calls = "; ".join(f"{c['name']}({c['arguments']})" for c in r["calls"])
+            console.print(f"[dim]{r['id']}: {calls}[/dim]", markup=True, highlight=False)
+    console.print(f"[dim]saved {path.relative_to(settings.processed_dir.parents[1])}[/dim]")
+
+
 @app.command("eval-generation")
 def eval_generation(
     generator: str = typer.Option(None, "--generator", "-g"),
