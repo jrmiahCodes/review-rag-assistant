@@ -1,0 +1,21 @@
+# Personal files: never commit
+*.pdf
+private/
+
+# Secrets
+.env
+
+# Data and local indexes (rebuilt by the pipeline)
+data/
+weaviate_data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+web/dist/
