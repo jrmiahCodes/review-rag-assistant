@@ -19,7 +19,7 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
         format="%(message)s",
         handlers=[RichHandler(console=console, show_path=False)],
     )
-    for noisy in ("httpx", "httpcore", "urllib3", "sentence_transformers", "weaviate"):
+    for noisy in ("httpx", "httpcore", "urllib3", "huggingface_hub", "sentence_transformers", "weaviate"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
@@ -124,6 +124,14 @@ def eval_generation(
     for k, v in result["summary"].items():
         console.print(f"{k:32} {v:.3f}" if isinstance(v, float) else f"{k:32} {v}")
     console.print(f"[dim]saved {path.relative_to(settings.processed_dir.parents[1])}[/dim]")
+
+
+@app.command()
+def serve(port: int = 8000) -> None:
+    """Run the API (and the built web UI, if present) on localhost."""
+    import uvicorn
+
+    uvicorn.run("review_rag_assistant.server:app", host="127.0.0.1", port=port)
 
 
 if __name__ == "__main__":

@@ -79,6 +79,7 @@ def connect() -> Iterator[weaviate.WeaviateClient]:
     client = weaviate.connect_to_embedded(
         version=settings.weaviate_version,
         persistence_data_path=str(settings.weaviate_data_dir),
+        environment_variables={"LOG_LEVEL": "warning"},
     )
     try:
         yield client
@@ -199,6 +200,17 @@ def search(
         score = o.metadata.score if o.metadata.score is not None else 1 - (o.metadata.distance or 0)
         hits.append(Hit(collection=collection, id=o.properties[key], properties=o.properties, score=float(score)))
     return hits
+
+
+def fetch_products(client: weaviate.WeaviateClient, asins: list[str]) -> list[Hit]:
+    """Look up product listings by parent_asin, preserving the given order."""
+    if not asins:
+        return []
+    res = client.collections.use(PRODUCT).query.fetch_objects(
+        filters=wvc.query.Filter.by_property("parent_asin").contains_any(asins), limit=len(asins)
+    )
+    by_asin = {o.properties["parent_asin"]: o.properties for o in res.objects}
+    return [Hit(collection=PRODUCT, id=a, properties=by_asin[a], score=0.0) for a in asins if a in by_asin]
 
 
 def distinct_values(client: weaviate.WeaviateClient, prop: str) -> list[str]:

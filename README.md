@@ -45,7 +45,23 @@ The golden set (`eval/golden.jsonl`) has questions of five types: specific revie
 - **Retrieval** (`uv run rra eval-retrieval`, no LLM calls): hit@5, hit@10, and MRR for BM25, vector, hybrid, and hybrid+rerank. Strict scoring counts only the exact source review; lenient scoring accepts any source from the right product.
 - **Generation** (`uv run rra eval-generation`): runs the full pipeline. Free automatic checks cover invalid citation numbers, uncited answers, and price-constraint violations. A Claude judge scores faithfulness, correctness, and citation quality against the exact sources the generator saw, and checks whether unanswerable questions get an abstention.
 
-Results tables are in progress.
+### Retrieval results (preliminary)
+
+These numbers come from 53 LLM-drafted candidate questions that haven't been human-reviewed yet. They'll be rerun on the reviewed set. Strict scores use the 33 questions tied to a specific review. Lenient scores use 40 questions (product searches are excluded because they depend on the router's filters and sorting and have many valid answers; the generation eval covers them).
+
+| First stage | Rerank | Strict hit@5 | Strict hit@10 | Strict MRR | Lenient hit@5 | Lenient MRR | p50 latency |
+|---|---|---|---|---|---|---|---|
+| BM25 | no | 0.52 | 0.70 | 0.42 | 0.85 | 0.73 | 3 ms |
+| Vector | no | 0.61 | 0.67 | 0.43 | 0.97 | 0.90 | 12 ms |
+| Hybrid | no | 0.67 | 0.73 | 0.48 | 0.95 | 0.86 | 15 ms |
+| Hybrid | yes | 0.67 | **0.85** | **0.52** | 0.90 | 0.86 | 364 ms |
+
+What this shows so far:
+- Hybrid beats BM25 and vector alone at finding the exact supporting review (strict hit@5 0.67 vs 0.52 and 0.61).
+- Reranking moves the exact review up the list (strict MRR 0.48 to 0.52, hit@10 0.73 to 0.85), at a cost of about 350 ms on an RTX 2070.
+- Vector search alone is best at finding *some* review of the right product (lenient hit@5 0.97). The reranker sometimes promotes a very on-topic review of a different product. With only 40 questions, that gap is within noise, and the reviewed set will show whether it holds.
+
+Generation results are in progress.
 
 ## Running it
 

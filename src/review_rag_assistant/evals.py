@@ -60,9 +60,11 @@ def retrieval_eval(client: weaviate.WeaviateClient, items: list[dict], k: int = 
     for name, cfg in RETRIEVAL_CONFIGS.items():
         for item in items:
             rids, asins = set(item["relevant_review_ids"]), set(item["relevant_asins"])
-            if not rids and not asins:
+            # Product searches depend on the router's filters and sorting, and have many valid answers,
+            # so raw-question retrieval can't score them fairly. The generation eval covers them.
+            if item["type"] == "product_search" or (not rids and not asins):
                 continue
-            collection = store.PRODUCT if item["type"] == "product_search" else store.REVIEW
+            collection = store.REVIEW
             t = time.perf_counter()
             res = retrieve(client, collection, item["question"], k=k, config=cfg)
             ms = (time.perf_counter() - t) * 1000

@@ -38,7 +38,7 @@ ANSWER_SYSTEM = """You answer questions about video game products using ONLY the
 Rules:
 1. Cite every factual claim with source numbers in square brackets, like [2] or [1][4]. Never cite a source that does not support the claim.
 2. If the sources do not answer the question, say so plainly and briefly. Do not fill gaps with outside knowledge.
-3. When reporting what reviewers think, describe the balance of opinion ("most reviewers...", "a few reviewers report...") instead of presenting one review as fact.
+3. The reviews you see were retrieved because they match the question, so they over-represent that topic. When a PRODUCT listing is present, state its overall rating and rating count to put the reviews in context (e.g. "several reviewers report drift [3][4], though the controller averages 4.7/5 across 40,352 ratings [1]"). Say "some reviewers" or "several reviewers", not "most" or "many", unless the sources show it.
 4. Prices and ratings come from the product listings. Mention them when relevant.
 5. Be concise: a short direct answer, then supporting detail. Use a bulleted list for multiple products."""
 
@@ -148,6 +148,25 @@ def execute(client: weaviate.WeaviateClient, call: ToolCall, cfg: RetrievalConfi
     return hits, res.timings_ms
 
 
+LISTINGS_FOR_REVIEWS = 2
+
+
+def add_listings_for_reviews(client: weaviate.WeaviateClient, hits: list[Hit]) -> list[Hit]:
+    """Put the product listing for the most-reviewed products first.
+
+    A search for "stick drift" returns only drift complaints. Without the listing's
+    overall rating (e.g. 4.7 from 40K ratings) the generator can't tell a common
+    complaint from a vocal minority.
+    """
+    have = {h.id for h in hits if h.collection == store.PRODUCT}
+    counts: dict[str, int] = {}
+    for h in hits:
+        if h.collection == store.REVIEW and (a := h.properties["parent_asin"]) not in have:
+            counts[a] = counts.get(a, 0) + 1
+    top = sorted(counts, key=counts.get, reverse=True)[:LISTINGS_FOR_REVIEWS]
+    return store.fetch_products(client, top) + hits
+
+
 def to_sources(hits: list[Hit]) -> list[Source]:
     sources, seen = [], set()
     for h in hits:
@@ -222,7 +241,7 @@ def answer_events(
     for call in calls:
         call_hits, _ = execute(client, call, cfg)
         hits.extend(call_hits)
-    sources = to_sources(hits)
+    sources = to_sources(add_listings_for_reviews(client, hits))
     timings["retrieve"] = (time.perf_counter() - t) * 1000
     yield {"type": "sources", "sources": [asdict(s) for s in sources]}
 
