@@ -4,7 +4,11 @@ A shopping assistant for video game products, built on retrieval-augmented gener
 
 It runs on a consumer GPU (an RTX 2070 with 8 GB) using open-weight models. Claude is optional. I use it as the eval judge and as a point of comparison.
 
-> Status: in active development. Ingestion, retrieval, generation, and evals work from the CLI. The web UI and the generation results are next.
+> Status: in active development. Ingestion, retrieval, generation, the web UI, and the retrieval and router evals all work. Judged generation results are next.
+
+![An answer about DualSense stick drift. Citation chips are colored by the star rating of the review they cite, and the sources rail shows each review with its rerank score.](docs/answer.png)
+
+The color of each citation is the star rating of the review behind it, so you can see whether a claim rests on 1-star complaints or 5-star praise. The panel under the answer shows what the router searched for, with which filters, and where the time went.
 
 ## Architecture
 
@@ -61,7 +65,29 @@ What I take from this so far:
 - Reranking moves the exact review up the list. Strict MRR goes from 0.48 to 0.52 and hit@10 from 0.73 to 0.85, for about 350 ms per query on an RTX 2070.
 - Vector search alone is best at finding some review of the right product, at 0.97. The reranker sometimes promotes an on-topic review of a different product. With 40 questions that gap could be noise, and the reviewed set will tell.
 
-Generation results are in progress.
+### Router results
+
+`uv run rra eval-router` checks 48 questions for the expected tool and the filters the question states.
+
+| Router model | Expected tool | Stated filters extracted | Extra filters added | Median time |
+|---|---|---|---|---|
+| qwen3.5:4b | 85% | 4 of 4 | 38% | 1.0 s |
+| qwen3.5:9b | 83% | 4 of 4 | 27% | 1.4 s |
+
+The first run found a real bug. The router offered 13 product types, one of them "Digital Video Games" with a single product in it, and the 4B model picked it for questions about Nioh, PS5 games, and Zelda. The filtered search returned nothing, and the answer said "the sources don't contain this" for three questions the data could answer. Two fixes: the router now only sees categories with at least 20 products, and when a platform or category filter leaves fewer than 3 results, the search retries without it. After the fixes, the share of answers with no citations dropped from 8% to 0%.
+
+"Extra filters" overstates the problem. Most are platforms the question names, like Switch for "Switch screen protector", which the golden set doesn't list as required. Telling the 4B model to add fewer filters made no difference, so the retry fallback carries that load.
+
+### Generation results (code checks only)
+
+Judge scores need an API key and come next. These are the checks code can make on its own, over all 53 questions:
+
+| Generator | Uncited answers | Invalid citations | Products within price limit | Median first word | Median full answer |
+|---|---|---|---|---|---|
+| qwen3.5:4b | 0% | 0% | 100% | 1.3 s | 6.9 s |
+| qwen3.5:9b | 0% | 0% | 100% | 3.3 s | 12.6 s |
+
+Reading the answers by hand turns up what the numbers miss. The 4B model correctly declines three of the five unanswerable questions. On the other two it substitutes something nearby: it describes the PS5 controller when asked about a PS6 controller, and it builds a return policy out of reviewers' offhand comments. The 9B model declines four of five, including the PS6 trap, at almost twice the latency. The judge run will put numbers on that tradeoff.
 
 ## Running it
 
@@ -81,6 +107,15 @@ uv run rra select            # DuckDB selection -> data/processed/*.parquet
 uv run rra index --recreate  # chunk, embed, load into Weaviate
 uv run rra ask "Do people report stick drift on the DualSense controller?"
 ```
+
+To run the web UI, build it once and start the server. It serves both the API and the UI at http://127.0.0.1:8000.
+
+```bash
+cd web && npm install && npm run build && cd ..
+uv run rra serve
+```
+
+For front-end work, run `npm run dev` in `web/` alongside `uv run rra serve`. Vite proxies `/api` to the backend.
 
 To use the Claude judge, or Claude as the generator with `-g anthropic:claude-sonnet-5-5`, copy `.env.example` to `.env` and add `ANTHROPIC_API_KEY`.
 

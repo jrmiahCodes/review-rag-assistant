@@ -1,12 +1,33 @@
 """Local embedding and reranking models, loaded once per process."""
 
+import os
 from functools import lru_cache
+from pathlib import Path
+
+from review_rag_assistant.config import settings
+
+
+def _use_offline_hub_if_cached() -> None:
+    """Skip Hugging Face network checks when both models are already downloaded.
+
+    Without this, every start makes HTTP calls to the Hub, which slows startup and fails
+    a live demo on a bad connection. A fresh clone still downloads normally.
+    """
+    if "HF_HUB_OFFLINE" in os.environ:
+        return
+    hub = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface")) / "hub"
+    names = (settings.embed_model, settings.rerank_model)
+    if all((hub / f"models--{n.replace('/', '--')}" / "snapshots").is_dir() for n in names):
+        os.environ["HF_HUB_OFFLINE"] = "1"
+
+
+_use_offline_hub_if_cached()
+
+# These imports read HF_HUB_OFFLINE when they load, so they come after the check above.
 
 import numpy as np
 import torch
 from sentence_transformers import CrossEncoder, SentenceTransformer
-
-from review_rag_assistant.config import settings
 
 # bge v1.5 models retrieve better when short queries carry this instruction. Passages get no prefix.
 BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
