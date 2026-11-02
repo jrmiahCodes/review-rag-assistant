@@ -63,7 +63,7 @@ export function Trace({ calls, timings, model, usage, settings }: Props) {
   return (
     <details className="group mt-8 rounded-[10px] border border-line bg-surface" open>
       <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold select-none">
-        How this was answered
+        How the assistant answered
         <svg viewBox="0 0 12 12" className="h-3 w-3 text-ink-faint transition-transform group-open:rotate-180" aria-hidden>
           <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </svg>
@@ -92,9 +92,9 @@ export function Trace({ calls, timings, model, usage, settings }: Props) {
         )}
         {model && usage && (
           <p className="text-xs text-ink-faint">
-            Written by <span className="text-ink">{model}</span> from{' '}
-            <span className="num">{usage.input_tokens.toLocaleString()}</span> input tokens,{' '}
-            <span className="num">{usage.output_tokens.toLocaleString()}</span> output tokens.
+            <span className="text-ink">{model}</span> read{' '}
+            <span className="num">{usage.input_tokens.toLocaleString()}</span> tokens and wrote{' '}
+            <span className="num">{usage.output_tokens.toLocaleString()}</span>.
           </p>
         )}
       </div>

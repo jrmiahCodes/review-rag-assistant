@@ -114,7 +114,7 @@ export function AskPage({ meta }: { meta: Meta | null }) {
             </h1>
             <p className="mt-4 max-w-[60ch] text-lg text-ink-soft">
               Answers come from {meta ? fmtInt(meta.counts.products) : '4,000'} Amazon listings and their customer
-              reviews, written through September 2023. Every claim links to the review or listing it came from.
+              reviews, written through September 2023. Each numbered citation opens the review or listing behind the claim.
             </p>
           </>
         )}

@@ -165,7 +165,7 @@ function GenerationTable({ runs }: { runs: GenSummary[] }) {
     { label: 'Faithfulness to sources (judge)', get: (s) => score(s.faithfulness) },
     { label: 'Correctness (judge)', get: (s) => score(s.correctness) },
     { label: 'Citation quality (judge)', get: (s) => score(s.citation_quality) },
-    { label: 'Says "not in the data" when it isn\'t', get: (s) => (s.faithfulness ? pct(s.abstain_rate_unanswerable) : 'not judged') },
+    { label: 'Declines questions the data can\'t answer', get: (s) => (s.faithfulness ? pct(s.abstain_rate_unanswerable) : 'not judged') },
     { label: 'Answers with no citations', get: (s) => pct(s.uncited_answer_rate) },
     { label: 'Answers citing a source that doesn\'t exist', get: (s) => pct(s.invalid_citation_rate) },
     { label: 'Recommended products within the price limit', get: (s) => pct(s.price_constraint_ok) },
@@ -220,8 +220,8 @@ export function EvalsPage() {
     <div className="mx-auto max-w-6xl px-4 pt-12 pb-24 sm:px-6">
       <h1 className="text-3xl font-extrabold tracking-[-0.02em]">How well it works</h1>
       <p className="mt-3 max-w-[64ch] text-ink-soft">
-        Scores from the golden question set: questions with known answers, including some about products that aren't
-        in the data. Rerun them with <code className="rounded bg-surface px-1 text-sm">uv run rra eval-retrieval</code>{' '}
+        Scores on the golden set, a list of questions with known answers. Some ask about products that aren't in the
+        data, to check that the assistant says so. Rerun them with <code className="rounded bg-surface px-1 text-sm">uv run rra eval-retrieval</code>{' '}
         and <code className="rounded bg-surface px-1 text-sm">uv run rra eval-generation</code>.
       </p>
 
@@ -232,12 +232,12 @@ export function EvalsPage() {
       <section className="mt-10">
         <h2 className="text-lg font-bold">Finding the right evidence</h2>
         <p className="mt-1 mb-4 max-w-[64ch] text-sm text-ink-soft">
-          Each search method gets the raw question. No LLM is involved, so these numbers are deterministic.
+          Each search method gets the raw question. No LLM runs here, so the same index gives the same numbers every time.
         </p>
         {retrieval ? (
           <RetrievalTable summary={retrieval.summary as Record<string, RetrievalRow>} />
         ) : (
-          results && <p className="text-sm text-ink-faint">No retrieval results yet. Run uv run rra eval-retrieval.</p>
+          results && <p className="text-sm text-ink-faint">No retrieval results yet. Run "uv run rra eval-retrieval".</p>
         )}
       </section>
 
@@ -249,7 +249,7 @@ export function EvalsPage() {
         {router.length ? (
           <RouterTable runs={router} />
         ) : (
-          results && <p className="text-sm text-ink-faint">No router results yet. Run uv run rra eval-router.</p>
+          results && <p className="text-sm text-ink-faint">No router results yet. Run "uv run rra eval-router".</p>
         )}
       </section>
 
@@ -262,7 +262,7 @@ export function EvalsPage() {
         {generation.length ? (
           <GenerationTable runs={generation} />
         ) : (
-          results && <p className="text-sm text-ink-faint">No generation results yet. Run uv run rra eval-generation.</p>
+          results && <p className="text-sm text-ink-faint">No generation results yet. Run "uv run rra eval-generation".</p>
         )}
       </section>
     </div>
