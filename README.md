@@ -1,10 +1,10 @@
 # review-rag-assistant
 
-A retrieval-augmented shopping assistant for video game products. Ask it "which wireless headsets under $60 do people like?" or "do DualSense controllers drift?" and it answers from 4,000 Amazon product listings and 66K customer reviews, citing the listing or review behind every claim.
+A shopping assistant for video game products, built on retrieval-augmented generation. Ask it "which wireless headsets under $60 do people like?" or "do DualSense controllers drift?" and it answers from 4,000 Amazon product listings and 67K customer reviews. Every claim cites the listing or review it came from.
 
-It runs entirely on a laptop GPU (RTX 2070, 8 GB) with open-source models. Claude is optional, used as an eval judge and as a comparison point.
+It runs on a consumer GPU (an RTX 2070 with 8 GB) using open-weight models. Claude is optional. I use it as the eval judge and as a point of comparison.
 
-> Status: in active development. The ingestion, retrieval, generation, and eval pipelines work from the CLI. The web UI and the results tables below are in progress.
+> Status: in active development. Ingestion, retrieval, generation, and evals work from the CLI. The web UI and the generation results are next.
 
 ## Architecture
 
@@ -28,26 +28,26 @@ flowchart LR
 
 ## How it works
 
-**Selection (DuckDB).** The raw Video Games category has 137K products and 4.6M reviews. A DuckDB query reads the JSONL directly and keeps priced products with at least 50 ratings, the top 4,000 by rating count, and up to 20 reviews per product, preferring verified and helpful ones. It drops gift cards and misfiled items (books and DVDs in the games category), strips HTML from review text, and hashes stable review IDs. The step takes about 3 seconds and logs row counts at each stage.
+**Selection.** The raw Video Games category has 137K products and 4.6M reviews. A DuckDB query reads the JSONL files directly. It keeps priced products with at least 50 ratings, takes the top 4,000 by rating count, and keeps up to 20 reviews per product, verified and most helpful first. It also drops gift cards, drops misfiled items such as books and DVDs, strips HTML from review text, and hashes a stable ID for each review. The whole step takes about 3 seconds and logs the row count after each filter.
 
-**Chunking.** Most reviews fit in one chunk. Longer ones split on sentence boundaries at about 300 tokens with a small overlap. Every chunk gets a header naming the product, its category, and the star rating. Without it, a review that says "the battery dies in two hours" can't be matched to a search for "Xbox controller battery life".
+**Chunking.** Most reviews fit in one chunk. Longer ones split on sentence boundaries at about 300 tokens, with a small overlap. Every chunk starts with a header naming the product, its category, and the star rating. A review that says "the battery dies in two hours" never names the product, and without the header a search for "Xbox controller battery life" can't find it.
 
-**Two-stage retrieval.** Weaviate runs a hybrid search (BM25 for exact terms like model numbers, vectors for meaning like "comfortable for long sessions") with metadata filters, and returns 30 candidates. A cross-encoder then reads each question and candidate together and reorders them. The reranker is too slow to run on the whole corpus but works well on a shortlist.
+**Two-stage retrieval.** Weaviate runs a hybrid search with metadata filters and returns 30 candidates. BM25 catches exact terms like model numbers. Vectors catch meaning, like "comfortable for long sessions". A cross-encoder then reads the question and each candidate together and reorders them. It's too slow to run over 80K chunks, but on 30 candidates it adds about 350 ms.
 
-**Routing.** The LLM turns the question into typed tool calls instead of SQL: `search_products(query, max_price, min_average_rating, platform, product_type, sort_by)` and `search_reviews(query, ...)`. A 4B model fills in arguments reliably but writes SQL poorly, and typed tools can't run arbitrary queries. If routing fails, the question goes straight to review search.
+**Routing.** The LLM turns the question into typed tool calls: `search_products(query, max_price, min_average_rating, platform, product_type, sort_by)` and `search_reviews(query, ...)`. I chose typed tools over text-to-SQL. Filling in a few arguments is an easier job for a 4B model than writing correct SQL, and typed tools can't run arbitrary queries. If routing fails, the question goes straight to review search.
 
-**Grounded generation.** The generator sees numbered sources and must cite them, say when the sources don't answer the question, and report the balance of reviewer opinion instead of treating one review as fact.
+**Grounded generation.** The generator sees numbered sources and has to cite them. It must say when the sources don't answer the question. Reviews retrieved for "stick drift" are all drift complaints, so the pipeline also attaches the product listing, and the prompt tells the model to report the overall rating alongside the complaints.
 
 ## Evaluation
 
-The golden set (`eval/golden.jsonl`) has questions of five types: specific review facts, product opinions, filtered product searches, comparisons, and unanswerable questions (products that don't exist in the 2023 data). An LLM drafted candidates from sampled reviews, and a human reviewed and edited them. Each question records which reviews and products answer it.
+The golden set in `eval/golden.jsonl` has five kinds of question: specific review facts, product opinions, filtered product searches, comparisons, and unanswerable questions about products that aren't in the 2023 data. Claude drafted 53 candidates from sampled reviews, and I'm reviewing and editing each one before the final runs. Each question lists the reviews and products that answer it.
 
-- **Retrieval** (`uv run rra eval-retrieval`, no LLM calls): hit@5, hit@10, and MRR for BM25, vector, hybrid, and hybrid+rerank. Strict scoring counts only the exact source review; lenient scoring accepts any source from the right product.
-- **Generation** (`uv run rra eval-generation`): runs the full pipeline. Free automatic checks cover invalid citation numbers, uncited answers, and price-constraint violations. A Claude judge scores faithfulness, correctness, and citation quality against the exact sources the generator saw, and checks whether unanswerable questions get an abstention.
+- `uv run rra eval-retrieval` scores hit@5, hit@10, and MRR for BM25, vector, hybrid, and hybrid+rerank. It makes no LLM calls. Strict scoring counts only the exact review a question came from. Lenient scoring accepts any review of the right product.
+- `uv run rra eval-generation` runs the full pipeline on every question. Code checks catch citation numbers that point at no source, answers with no citations, and recommended products over the stated price limit. A Claude judge scores faithfulness, correctness, and citation quality against the exact sources the generator saw, and checks that unanswerable questions get an "I don't know".
 
 ### Retrieval results (preliminary)
 
-These numbers come from 53 LLM-drafted candidate questions that haven't been human-reviewed yet. They'll be rerun on the reviewed set. Strict scores use the 33 questions tied to a specific review. Lenient scores use 40 questions (product searches are excluded because they depend on the router's filters and sorting and have many valid answers; the generation eval covers them).
+These come from the 53 unreviewed candidates, and I'll rerun them on the reviewed set. Strict scores use the 33 questions tied to one specific review. Lenient scores use 40 questions. I left out product searches, because raw retrieval can't apply the router's price filters and sorting, and most of those questions have many valid answers. The generation eval covers them instead.
 
 | First stage | Rerank | Strict hit@5 | Strict hit@10 | Strict MRR | Lenient hit@5 | Lenient MRR | p50 latency |
 |---|---|---|---|---|---|---|---|
@@ -56,16 +56,16 @@ These numbers come from 53 LLM-drafted candidate questions that haven't been hum
 | Hybrid | no | 0.67 | 0.73 | 0.48 | 0.95 | 0.86 | 15 ms |
 | Hybrid | yes | 0.67 | **0.85** | **0.52** | 0.90 | 0.86 | 364 ms |
 
-What this shows so far:
-- Hybrid beats BM25 and vector alone at finding the exact supporting review (strict hit@5 0.67 vs 0.52 and 0.61).
-- Reranking moves the exact review up the list (strict MRR 0.48 to 0.52, hit@10 0.73 to 0.85), at a cost of about 350 ms on an RTX 2070.
-- Vector search alone is best at finding *some* review of the right product (lenient hit@5 0.97). The reranker sometimes promotes a very on-topic review of a different product. With only 40 questions, that gap is within noise, and the reviewed set will show whether it holds.
+What I take from this so far:
+- Hybrid finds the exact supporting review more often than either method alone, with strict hit@5 of 0.67 against 0.52 for BM25 and 0.61 for vector.
+- Reranking moves the exact review up the list. Strict MRR goes from 0.48 to 0.52 and hit@10 from 0.73 to 0.85, for about 350 ms per query on an RTX 2070.
+- Vector search alone is best at finding some review of the right product, at 0.97. The reranker sometimes promotes an on-topic review of a different product. With 40 questions that gap could be noise, and the reviewed set will tell.
 
 Generation results are in progress.
 
 ## Running it
 
-Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), [Ollama](https://ollama.com), and an NVIDIA GPU (CPU works but is slow). No Docker: Weaviate runs in embedded mode.
+You need Python 3.12, [uv](https://docs.astral.sh/uv/), [Ollama](https://ollama.com), and an NVIDIA GPU. CPU works, slowly. There's no Docker, because Weaviate runs in embedded mode.
 
 ```bash
 uv sync
@@ -82,18 +82,24 @@ uv run rra index --recreate  # chunk, embed, load into Weaviate
 uv run rra ask "Do people report stick drift on the DualSense controller?"
 ```
 
-Copy `.env.example` to `.env` and add `ANTHROPIC_API_KEY` to use the Claude judge or Claude as the generator (`-g anthropic:claude-sonnet-5-5`).
+To use the Claude judge, or Claude as the generator with `-g anthropic:claude-sonnet-5-5`, copy `.env.example` to `.env` and add `ANTHROPIC_API_KEY`.
 
 ## Known limitations
 
-- **The data ends in 2023.** Amazon Reviews 2023 is the newest public release. The assistant knows nothing about later products, and the golden set tests that it says so.
-- **Amazon's category labels are sometimes wrong**, e.g. a Switch LAN adapter tagged as Wii U or a PS5 racing wheel tagged as PlayStation 3. Platform filters inherit those errors.
-- **The corpus is a sample.** It covers 20 reviews for each of 4,000 products, so opinion summaries describe that sample, not every review on Amazon.
+**The data ends in 2023.** Amazon Reviews 2023 is the newest public release, so the assistant knows nothing about later products. The golden set checks that it says so.
+
+**Amazon's category labels are sometimes wrong.** A Switch LAN adapter is tagged Wii U, and a PS5 racing wheel is tagged PlayStation 3. Platform filters inherit those mistakes.
+
+**The corpus is a sample.** It holds 20 reviews per product, so an opinion summary describes those 20 reviews, not everything on Amazon.
 
 ## Data
 
-[Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) (Hou et al., 2024, McAuley Lab, UCSD). The dataset is released for research use without a formal license. This repo contains code only and no review text.
+[Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) (Hou et al., 2024, McAuley Lab, UCSD). The lab released it for research use without a formal license. This repo contains code only, no review text.
 
 ## Background
 
-This project modernizes the stack from the 2023 [Full Stack LLM Bootcamp](https://fullstackdeeplearning.com/llm-bootcamp/) (askFSDL: sourced Q&A, LangChain, vector search) with what has become standard since: hybrid search and reranking, typed tool calls instead of agent loops, local open-weight models, and evals as a first-class part of the project.
+The 2023 [Full Stack LLM Bootcamp](https://fullstackdeeplearning.com/llm-bootcamp/) built askFSDL, a Q&A bot with sources, on LangChain and vector search. This project keeps that idea and replaces the parts that have changed since:
+- hybrid search plus reranking instead of vector search alone
+- typed tool calls instead of open-ended agent loops
+- a local open-weight model instead of a hosted API
+- an eval suite that measures each of these choices
