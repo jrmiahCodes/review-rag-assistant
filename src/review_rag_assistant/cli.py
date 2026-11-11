@@ -127,7 +127,10 @@ def eval_router(generator: str = typer.Option(None, "--generator", "-g")) -> Non
 @app.command("eval-generation")
 def eval_generation(
     generator: str = typer.Option(None, "--generator", "-g"),
-    judge: bool = typer.Option(True, help="Score answers with the Claude judge (needs ANTHROPIC_API_KEY)."),
+    judge: bool = typer.Option(True, help="Score answers with the Claude judge."),
+    judge_with: str = typer.Option(
+        "auto", help="api (needs ANTHROPIC_API_KEY), claude-code (local CLI login), or auto (api if a key is set)."
+    ),
     limit: int = typer.Option(0, help="Only run the first N items (0 = all)."),
 ) -> None:
     """Run the full pipeline on the golden set and score the answers."""
@@ -137,7 +140,7 @@ def eval_generation(
     if limit:
         items = items[:limit]
     with store.connect() as client:
-        result = evals.generation_eval(client, items, generator, use_judge=judge)
+        result = evals.generation_eval(client, items, generator, use_judge=judge, judge_with=judge_with)
     path = evals.save("generation", result["summary"]["generator"], result)
     for k, v in result["summary"].items():
         console.print(f"{k:32} {v:.3f}" if isinstance(v, float) else f"{k:32} {v}")

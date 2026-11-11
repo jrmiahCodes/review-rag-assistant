@@ -7,8 +7,12 @@ Retrieval is scored two ways:
 """
 
 import json
+import logging
+import os
 import re
+import shutil
 import statistics
+import subprocess
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -20,6 +24,8 @@ from pydantic import BaseModel, Field
 from review_rag_assistant import store
 from review_rag_assistant.config import ROOT, settings
 from review_rag_assistant.retrieve import RetrievalConfig, retrieve
+
+log = logging.getLogger(__name__)
 
 EVAL_DIR = ROOT / "eval"
 RESULTS_DIR = EVAL_DIR / "results"
@@ -209,12 +215,49 @@ Grade strictly against the sources shown, not your own knowledge of the products
 For questions marked unanswerable, a good answer clearly says the sources don't cover it; inventing an answer scores 1 on correctness and faithfulness."""
 
 
-def judge(item: dict, result: dict, model: str | None = None) -> Verdict:
-    import anthropic
+def judge_backend(requested: str = "auto") -> str:
+    """Pick how to reach the judge: the API with a key, else the local Claude Code CLI."""
+    if requested != "auto":
+        return requested
+    if settings.anthropic_api_key:
+        return "api"
+    if shutil.which("claude"):
+        return "claude-code"
+    raise RuntimeError("No judge available. Set ANTHROPIC_API_KEY or install Claude Code, or pass --no-judge.")
 
+
+def _judge_via_claude_code(system: str, prompt: str, model: str) -> Verdict:
+    """Run one judge call through headless Claude Code (`claude -p`), billed to the logged-in subscription.
+
+    For a handful of personal eval runs only. Tools, MCP servers, settings, and session history are all
+    turned off, so the model sees only the judge prompt and must answer in the Verdict schema.
+    """
+    cmd = [
+        "claude", "-p",
+        "--model", model,
+        "--system-prompt", system,
+        "--json-schema", json.dumps(Verdict.model_json_schema()),
+        "--output-format", "json",
+        "--tools", "",
+        "--strict-mcp-config",
+        "--setting-sources", "",
+        "--no-session-persistence",
+    ]  # fmt: skip
+    # Claude Code refuses to start nested inside another session unless these are cleared.
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+    proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=300, env=env, check=False)
+    try:
+        out = json.loads(proc.stdout)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"claude -p failed ({proc.returncode}): {proc.stderr.strip() or proc.stdout[:300]}") from e
+    if out.get("is_error") or not out.get("structured_output"):
+        raise RuntimeError(f"claude -p returned no verdict: {str(out.get('result'))[:300]}")
+    return Verdict.model_validate(out["structured_output"])
+
+
+def judge(item: dict, result: dict, model: str | None = None, backend: str = "api") -> Verdict:
     from review_rag_assistant.answer import Source, format_context
 
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     sources = [Source(**s) for s in result.get("sources", [])]
     prompt = (
         f"QUESTION: {item['question']}\n"
@@ -223,6 +266,12 @@ def judge(item: dict, result: dict, model: str | None = None) -> Verdict:
         f"SOURCES GIVEN TO THE ASSISTANT:\n{format_context(sources) or '(none)'}\n\n"
         f"ASSISTANT ANSWER:\n{result['answer']}"
     )
+    if backend == "claude-code":
+        return _judge_via_claude_code(JUDGE_SYSTEM, prompt, model or settings.judge_model)
+
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     res = client.messages.parse(
         model=model or settings.judge_model,
         max_tokens=2000,
@@ -256,7 +305,11 @@ class GenRow:
 
 
 def generation_eval(
-    client: weaviate.WeaviateClient, items: list[dict], generator: str | None = None, use_judge: bool = True
+    client: weaviate.WeaviateClient,
+    items: list[dict],
+    generator: str | None = None,
+    use_judge: bool = True,
+    judge_with: str = "auto",
 ) -> dict:
     from review_rag_assistant.answer import answer, router_tools
     from review_rag_assistant.llm import get_llm
@@ -264,6 +317,7 @@ def generation_eval(
     llm = get_llm(generator)
     tools = router_tools(store.distinct_values(client, "platform"), store.distinct_values(client, "product_type"))
     rows: list[GenRow] = []
+    backend = judge_backend(judge_with) if use_judge else None
     for item in items:
         res = answer(item["question"], llm, client, tools)
         cc = citation_check(res["answer"], len(res["sources"]))
@@ -281,7 +335,12 @@ def generation_eval(
             **cc,
         )
         if use_judge:
-            v = judge(item, res)
+            try:
+                v = judge(item, res, backend=backend)
+            except Exception:
+                log.exception("judge failed on %s, leaving it unjudged", item["id"])
+                rows.append(row)
+                continue
             row.faithfulness, row.correctness, row.citation_quality = v.faithfulness, v.correctness, v.citation_quality
             row.abstained, row.judge_reasoning = v.abstained, v.reasoning
         rows.append(row)
@@ -293,6 +352,8 @@ def generation_eval(
     summary = {
         "generator": llm.name,
         "n": len(rows),
+        "n_judged": len(judged),
+        "judge": f"{settings.judge_model} via {backend}" if backend else None,
         "faithfulness": _mean(r.faithfulness for r in judged),
         "correctness": _mean(r.correctness for r in judged),
         "citation_quality": _mean(r.citation_quality for r in judged),
